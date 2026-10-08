@@ -10,7 +10,8 @@ import {
   Building,
   User,
   Phone,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
 
 interface WithdrawalItem {
@@ -58,7 +59,11 @@ export default function AdminWithdrawalRequests() {
     fetchWithdrawals();
   }, [fetchWithdrawals]);
 
+  const [processingId, setProcessingId] = useState<string | number | null>(null);
+
   const handleApprove = async (req: WithdrawalItem) => {
+    if (processingId === req.id) return;
+    setProcessingId(req.id);
     try {
       const res = await apiClient.patch(`/wallet/withdrawals/${req.id}/process`, {
         action: 'approve',
@@ -72,13 +77,17 @@ export default function AdminWithdrawalRequests() {
       }
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to approve payout.');
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const handleReject = async (req: WithdrawalItem) => {
+    if (processingId === req.id) return;
     const reason = window.prompt('Enter rejection reason:');
     if (reason === null) return;
 
+    setProcessingId(req.id);
     try {
       const res = await apiClient.patch(`/wallet/withdrawals/${req.id}/process`, {
         action: 'reject',
@@ -92,6 +101,8 @@ export default function AdminWithdrawalRequests() {
       }
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to reject payout.');
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -282,17 +293,19 @@ export default function AdminWithdrawalRequests() {
                             <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={() => handleReject(r)}
-                                className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                                disabled={processingId === r.id}
+                                className="bg-red-50 hover:bg-red-100 disabled:opacity-50 text-red-700 border border-red-200 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1 cursor-pointer"
                               >
                                 <XCircle className="h-3.5 w-3.5" />
                                 <span>Reject</span>
                               </button>
                               <button
                                 onClick={() => handleApprove(r)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                                disabled={processingId === r.id}
+                                className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
                               >
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                <span>Approve & Settle</span>
+                                {processingId === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin text-white" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                                <span>{processingId === r.id ? 'Processing...' : 'Approve & Settle'}</span>
                               </button>
                             </div>
                           ) : (

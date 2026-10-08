@@ -14,7 +14,8 @@ import {
   Mail,
   CreditCard,
   AlertTriangle,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 
 export default function ShopVerify() {
@@ -33,18 +34,31 @@ export default function ShopVerify() {
     return unsubscribe;
   }, []);
 
-  const handleApprove = (shop: Shop) => {
-    shopStore.approveShop(shop.id);
-    setActionSuccessMsg(`Shop "${shop.shopName}" verified & forwarded to Admin successfully!`);
-    setTimeout(() => setActionSuccessMsg(''), 3000);
+  const [processingId, setProcessingId] = useState<string | number | null>(null);
+
+  const handleApprove = async (shop: Shop) => {
+    if (processingId === shop.id) return;
+    setProcessingId(shop.id);
+    try {
+      await shopStore.approveShop(shop.id);
+      setActionSuccessMsg(`Shop "${shop.shopName}" verified & forwarded to Admin successfully!`);
+      setTimeout(() => setActionSuccessMsg(''), 3000);
+    } finally {
+      setProcessingId(null);
+    }
   };
 
-  const handleConfirmReject = () => {
-    if (!selectedRejectShop) return;
-    shopStore.rejectShop(selectedRejectShop.id);
-    setActionSuccessMsg(`Registration request for "${selectedRejectShop.shopName}" rejected.`);
-    setSelectedRejectShop(null);
-    setTimeout(() => setActionSuccessMsg(''), 3000);
+  const handleConfirmReject = async () => {
+    if (!selectedRejectShop || processingId === selectedRejectShop.id) return;
+    setProcessingId(selectedRejectShop.id);
+    try {
+      await shopStore.rejectShop(selectedRejectShop.id);
+      setActionSuccessMsg(`Registration request for "${selectedRejectShop.shopName}" rejected.`);
+      setSelectedRejectShop(null);
+      setTimeout(() => setActionSuccessMsg(''), 3000);
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   return (
@@ -158,7 +172,8 @@ export default function ShopVerify() {
                   <button
                     type="button"
                     onClick={() => setSelectedRejectShop(shop)}
-                    className="px-4 py-2 border border-slate-200 text-slate-600 hover:text-red-600 hover:bg-red-50 font-semibold rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                    disabled={processingId === shop.id}
+                    className="px-4 py-2 border border-slate-200 text-slate-600 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 font-semibold rounded-xl text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
                     <XCircle className="h-4 w-4 text-red-500" />
                     <span>Reject</span>
@@ -167,10 +182,11 @@ export default function ShopVerify() {
                   <button
                     type="button"
                     onClick={() => handleApprove(shop)}
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition-colors flex items-center gap-1.5"
+                    disabled={processingId === shop.id}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow-md transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Verify & Forward to Admin</span>
+                    {processingId === shop.id ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <CheckCircle2 className="h-4 w-4" />}
+                    <span>{processingId === shop.id ? 'Verifying...' : 'Verify & Forward to Admin'}</span>
                   </button>
                 </div>
 

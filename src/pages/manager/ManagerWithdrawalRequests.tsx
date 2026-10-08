@@ -8,7 +8,8 @@ import {
   Search,
   Building,
   User,
-  Phone
+  Phone,
+  Loader2
 } from 'lucide-react';
 
 interface WithdrawalRequest {
@@ -70,17 +71,31 @@ export default function ManagerWithdrawalRequests() {
   const [searchTerm, setSearchTerm] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const handleApprove = (id: string, name: string) => {
-    const nowStr = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'APPROVED', approvedAt: nowStr } : r));
-    setSuccessMsg(`Withdrawal request for ${name} approved successfully!`);
-    setTimeout(() => setSuccessMsg(''), 3500);
+  const [processingId, setProcessingId] = useState<string | number | null>(null);
+
+  const handleApprove = async (id: string, name: string) => {
+    if (processingId === id) return;
+    setProcessingId(id);
+    try {
+      const nowStr = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'APPROVED', approvedAt: nowStr } : r));
+      setSuccessMsg(`Withdrawal request for ${name} approved successfully!`);
+      setTimeout(() => setSuccessMsg(''), 3500);
+    } finally {
+      setProcessingId(null);
+    }
   };
 
-  const handleReject = (id: string, name: string) => {
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'REJECTED' } : r));
-    setSuccessMsg(`Withdrawal request for ${name} rejected.`);
-    setTimeout(() => setSuccessMsg(''), 3500);
+  const handleReject = async (id: string, name: string) => {
+    if (processingId === id) return;
+    setProcessingId(id);
+    try {
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'REJECTED' } : r));
+      setSuccessMsg(`Withdrawal request for ${name} rejected.`);
+      setTimeout(() => setSuccessMsg(''), 3500);
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   const filtered = requests.filter(r => {
@@ -224,17 +239,19 @@ export default function ManagerWithdrawalRequests() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleReject(r.id, r.operatorName)}
-                              className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                              disabled={processingId === r.id}
+                              className="bg-red-50 hover:bg-red-100 disabled:opacity-50 text-red-700 border border-red-200 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1 cursor-pointer"
                             >
                               <XCircle className="h-3.5 w-3.5" />
                               <span>Reject</span>
                             </button>
                             <button
                               onClick={() => handleApprove(r.id, r.operatorName)}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                              disabled={processingId === r.id}
+                              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
                             >
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              <span>Approve</span>
+                              {processingId === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin text-white" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                              <span>{processingId === r.id ? 'Processing...' : 'Approve'}</span>
                             </button>
                           </div>
                         ) : (
