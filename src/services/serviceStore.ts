@@ -82,6 +82,7 @@ class ServiceStoreService {
   }
 
   public async syncBackend() {
+    if (!localStorage.getItem('v2online_token')) return;
     try {
       const response = await apiClient.get('/services');
       if (response.data.status === 'success' && Array.isArray(response.data.data)) {

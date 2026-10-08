@@ -46,6 +46,7 @@ class WalletStoreService {
   }
 
   public async syncBackend() {
+    if (!localStorage.getItem('v2online_token')) return;
     try {
       const response = await apiClient.get('/wallet/transactions');
       if (response.data.status === 'success') {
