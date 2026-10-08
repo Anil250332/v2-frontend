@@ -41,6 +41,7 @@ export const RegisterPage: React.FC = () => {
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [receivedOtp, setReceivedOtp] = useState('');
 
   // Step 1: Request OTP
   const handleRequestOtp = async (e: React.FormEvent) => {
@@ -79,6 +80,9 @@ export const RegisterPage: React.FC = () => {
       });
 
       if (response.data.status === 'success') {
+        if (response.data.debug_otp) {
+          setReceivedOtp(response.data.debug_otp);
+        }
         setStep(2);
       }
     } catch (error: any) {
@@ -112,6 +116,9 @@ export const RegisterPage: React.FC = () => {
       });
 
       if (response.data.status === 'success') {
+        if (response.data.debug_otp) {
+          setReceivedOtp(response.data.debug_otp);
+        }
         setResendMessage('Naya OTP email par successfully bhej diya gaya hai!');
       }
     } catch (error: any) {
@@ -459,10 +466,18 @@ export const RegisterPage: React.FC = () => {
                   </button>
                 </div>
 
-                <p className="text-xs text-slate-600 mb-4">
-                  {email ? <span>OTP sent to Email <strong className="text-blue-700">{email}</strong> </span> : <span>OTP sent to Mobile <strong className="text-emerald-700">+91-{mobile}</strong>.</span>}
-                  <span className="block text-[11px] text-slate-500 mt-0.5">⏱️ OTP is valid for 5 minutes.</span>
-                </p>
+                <div className="text-xs text-slate-600 mb-4 flex items-start justify-between gap-2 bg-blue-50/70 p-3 rounded-xl border border-blue-100">
+                  <div>
+                    {email ? <span>OTP sent to Email <strong className="text-blue-700">{email}</strong> </span> : <span>OTP sent to Mobile <strong className="text-emerald-700">+91-{mobile}</strong>.</span>}
+                    <span className="block text-[11px] text-slate-500 mt-0.5">⏱️ OTP is valid for 5 minutes.</span>
+                  </div>
+                  {receivedOtp && (
+                    <div className="bg-amber-100 border border-amber-300 text-amber-900 px-3 py-1.5 rounded-lg font-mono font-bold text-xs shrink-0 shadow-xs flex flex-col items-center">
+                      <span className="text-[10px] uppercase tracking-wider text-amber-700 font-sans font-semibold">OTP Code</span>
+                      <span className="text-sm text-amber-950 tracking-widest">{receivedOtp}</span>
+                    </div>
+                  )}
+                </div>
 
                 {resendMessage && (
                   <div className="mb-4 p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs flex items-center gap-2">
