@@ -28,11 +28,13 @@ import {
   IndianRupee,
   PlusCircle,
   MapPin,
-  FileText
+  FileText,
+  Loader2
 } from 'lucide-react';
 
 export default function AgentServices() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [walletBalance, setWalletBalance] = useState<number>(500);
@@ -92,16 +94,37 @@ export default function AgentServices() {
   const [selectedWardNo, setSelectedWardNo] = useState('');
 
   useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        await serviceStore.syncBackend();
+        await walletStore.syncBackend();
+        if (isMounted) {
+          setServices(serviceStore.getActiveServices());
+          setWalletBalance(walletStore.getBalance());
+        }
+      } catch (err) {
+        console.error('Failed to load services:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
     const update = () => {
       setServices(serviceStore.getActiveServices());
       setWalletBalance(walletStore.getBalance());
     };
-    update();
-    serviceStore.syncBackend();
-    walletStore.syncBackend();
+
     const unsub1 = serviceStore.subscribe(update);
     const unsub2 = walletStore.subscribe(update);
     return () => {
+      isMounted = false;
       unsub1();
       unsub2();
     };
@@ -310,6 +333,25 @@ export default function AgentServices() {
     }
     return <Layers className="h-8 w-8 text-blue-600" />;
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-[500px] flex flex-col items-center justify-center py-20 px-4">
+          <div className="relative flex items-center justify-center mb-6">
+            <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
+            <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-xl shadow-blue-500/30">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-1">Services Catalog Loading...</h3>
+          <p className="text-xs text-slate-500 max-w-sm text-center">
+            Portal se saari active Government Services aur application forms load ho rahe hain. Kripya prateeksha karein.
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

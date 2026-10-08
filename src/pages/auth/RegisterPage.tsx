@@ -212,7 +212,7 @@ export const RegisterPage: React.FC = () => {
       <div className="flex-1 flex flex-col justify-center py-8 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-xl px-4 sm:px-0">
           <div className="bg-white py-8 px-6 shadow-xl rounded-2xl border border-slate-200 sm:px-10">
-            
+
             {/* Error Alert */}
             {errorMessage && (
               <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-3.5 flex items-start gap-2.5 text-red-700 text-xs">
@@ -236,11 +236,10 @@ export const RegisterPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setRole('agent')}
-                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all ${
-                      role === 'agent'
+                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all ${role === 'agent'
                         ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-sm ring-1 ring-blue-600'
                         : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     <Store className="h-4 w-4" />
                     <span>MP Online Shop (Retailer)</span>
@@ -249,11 +248,10 @@ export const RegisterPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setRole('operator')}
-                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all ${
-                      role === 'operator'
+                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all ${role === 'operator'
                         ? 'bg-emerald-50 border-emerald-600 text-emerald-700 shadow-sm ring-1 ring-emerald-600'
                         : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     <Briefcase className="h-4 w-4" />
                     <span>Processing Officer (Operator)</span>
@@ -462,7 +460,7 @@ export const RegisterPage: React.FC = () => {
                 </div>
 
                 <p className="text-xs text-slate-600 mb-4">
-                  {email ? <span>OTP sent to Email <strong className="text-blue-700">{email}</strong> & Mobile <strong className="text-emerald-700">+91-{mobile}</strong>.</span> : <span>OTP sent to Mobile <strong className="text-emerald-700">+91-{mobile}</strong>.</span>}
+                  {email ? <span>OTP sent to Email <strong className="text-blue-700">{email}</strong> </span> : <span>OTP sent to Mobile <strong className="text-emerald-700">+91-{mobile}</strong>.</span>}
                   <span className="block text-[11px] text-slate-500 mt-0.5">⏱️ OTP is valid for 5 minutes.</span>
                 </p>
 
