@@ -9,7 +9,8 @@ import {
   Search,
   Phone,
   Mail,
-  Calendar
+  Calendar,
+  Loader2
 } from 'lucide-react';
 
 export default function ManagerVerifyRequests() {
@@ -28,21 +29,35 @@ export default function ManagerVerifyRequests() {
     return unsubscribe;
   }, []);
 
-  const handleApprove = (shop: Shop) => {
-    if (shop.status === 'DELETE_REQUESTED') {
-      shopStore.approveDeletion(shop.id);
-      setSuccessMsg(`Approved shop deletion request for "${shop.shopName}".`);
-    } else {
-      shopStore.approveShop(shop.id);
-      setSuccessMsg(`Approved & activated shop "${shop.shopName}".`);
+  const [processingId, setProcessingId] = useState<string | number | null>(null);
+
+  const handleApprove = async (shop: Shop) => {
+    if (processingId === shop.id) return;
+    setProcessingId(shop.id);
+    try {
+      if (shop.status === 'DELETE_REQUESTED') {
+        await shopStore.approveDeletion(shop.id);
+        setSuccessMsg(`Approved shop deletion request for "${shop.shopName}".`);
+      } else {
+        await shopStore.approveShop(shop.id);
+        setSuccessMsg(`Approved & activated shop "${shop.shopName}".`);
+      }
+      setTimeout(() => setSuccessMsg(''), 3500);
+    } finally {
+      setProcessingId(null);
     }
-    setTimeout(() => setSuccessMsg(''), 3500);
   };
 
-  const handleReject = (shop: Shop) => {
-    shopStore.rejectShop(shop.id);
-    setSuccessMsg(`Rejected request for "${shop.shopName}".`);
-    setTimeout(() => setSuccessMsg(''), 3500);
+  const handleReject = async (shop: Shop) => {
+    if (processingId === shop.id) return;
+    setProcessingId(shop.id);
+    try {
+      await shopStore.rejectShop(shop.id);
+      setSuccessMsg(`Rejected request for "${shop.shopName}".`);
+      setTimeout(() => setSuccessMsg(''), 3500);
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   const filtered = pendingShops.filter(s =>
@@ -170,17 +185,19 @@ export default function ManagerVerifyRequests() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleReject(shop)}
-                            className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                            disabled={processingId === shop.id}
+                            className="bg-red-50 hover:bg-red-100 disabled:opacity-50 text-red-700 border border-red-200 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1 cursor-pointer"
                           >
                             <XCircle className="h-3.5 w-3.5" />
                             <span>Reject</span>
                           </button>
                           <button
                             onClick={() => handleApprove(shop)}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                            disabled={processingId === shop.id}
+                            className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
                           >
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            <span>Approve</span>
+                            {processingId === shop.id ? <Loader2 className="h-3.5 w-3.5 animate-spin text-white" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                            <span>{processingId === shop.id ? 'Processing...' : 'Approve'}</span>
                           </button>
                         </div>
                       </td>

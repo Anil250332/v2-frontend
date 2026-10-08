@@ -11,7 +11,8 @@ import {
   Calendar,
   User as UserIcon,
   Tag,
-  FileText
+  FileText,
+  Loader2
 } from 'lucide-react';
 
 export default function AdminComplaints() {
@@ -43,20 +44,27 @@ export default function AdminComplaints() {
     setResolutionNote(ticket.resolutionNote || '');
   };
 
-  const handleSaveStatus = (e: React.FormEvent) => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveStatus = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTicket) return;
+    if (!selectedTicket || isSaving) return;
 
-    complaintStore.updateStatus(
-      selectedTicket.id,
-      status,
-      resolutionNote,
-      user?.full_name || 'Admin'
-    );
+    setIsSaving(true);
+    try {
+      await complaintStore.updateStatus(
+        selectedTicket.id,
+        status,
+        resolutionNote,
+        user?.full_name || 'Admin'
+      );
 
-    setSuccessMsg(`Status for ticket "${selectedTicket.ticketNo}" updated to ${status}!`);
-    setSelectedTicket(null);
-    setTimeout(() => setSuccessMsg(''), 3000);
+      setSuccessMsg(`Status for ticket "${selectedTicket.ticketNo}" updated to ${status}!`);
+      setSelectedTicket(null);
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const priorityMap: Record<string, number> = {
@@ -409,9 +417,17 @@ export default function AdminComplaints() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors"
+                    disabled={isSaving}
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer min-w-[140px]"
                   >
-                    Save & Update Ticket
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <span>Save & Update Ticket</span>
+                    )}
                   </button>
                 </div>
 

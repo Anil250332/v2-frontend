@@ -11,7 +11,8 @@ import {
   AlertCircle,
   X,
   CreditCard,
-  QrCode
+  QrCode,
+  Loader2
 } from 'lucide-react';
 
 export default function AgentWallet() {
@@ -37,8 +38,12 @@ export default function AgentWallet() {
     return unsubscribe;
   }, []);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleRechargeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent duplicate clicks
+
     setErrorMsg('');
 
     const amt = parseFloat(customAmount || rechargeAmount);
@@ -52,16 +57,21 @@ export default function AgentWallet() {
       return;
     }
 
-    const res = await walletStore.rechargeWallet(amt, 'Wallet Auto UPI Topup');
-    if (res.success) {
-      setSuccessMsg(res.message);
-      setCustomAmount('');
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setSuccessMsg('');
-      }, 2500);
-    } else {
-      setErrorMsg(res.message);
+    setIsSubmitting(true);
+    try {
+      const res = await walletStore.rechargeWallet(amt, 'Wallet Auto UPI Topup');
+      if (res.success) {
+        setSuccessMsg(res.message);
+        setCustomAmount('');
+        setTimeout(() => {
+          setIsModalOpen(false);
+          setSuccessMsg('');
+        }, 2000);
+      } else {
+        setErrorMsg(res.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -323,9 +333,17 @@ export default function AgentWallet() {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors"
+                    disabled={isSubmitting}
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer min-w-[150px]"
                   >
-                    Proceed to Add ₹{customAmount || rechargeAmount}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <span>Proceed to Add ₹{customAmount || rechargeAmount}</span>
+                    )}
                   </button>
                 </div>
 

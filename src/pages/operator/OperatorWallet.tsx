@@ -15,7 +15,8 @@ import {
   CreditCard,
   Hash,
   User,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
 
 export default function OperatorWallet() {
@@ -524,9 +525,16 @@ export default function OperatorWallet() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-4.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[140px]"
                   >
-                    {isSubmitting ? 'Submitting...' : 'Submit Withdrawal Request'}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <span>Submit Withdrawal Request</span>
+                    )}
                   </button>
                 </div>
 

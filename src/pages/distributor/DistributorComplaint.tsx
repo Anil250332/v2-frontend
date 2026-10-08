@@ -13,7 +13,8 @@ import {
   Tag,
   Calendar,
   Eye,
-  FileText
+  FileText,
+  Loader2
 } from 'lucide-react';
 
 export default function DistributorComplaint() {
@@ -40,8 +41,12 @@ export default function DistributorComplaint() {
     return unsubscribe;
   }, [user?.id, user?.mobile, user?.full_name]);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmitComplaint = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     setErrorMsg('');
 
     if (!subject.trim() || !description.trim()) {
@@ -49,22 +54,27 @@ export default function DistributorComplaint() {
       return;
     }
 
-    const newTicket = await complaintStore.addComplaint({
-      raisedByUserId: user?.id || user?.mobile || '8888888888',
-      raisedByName: user?.full_name || 'Portal User',
-      raisedByRole: (user?.role as any) || 'agent',
-      subject,
-      category,
-      description
-    });
+    setIsSubmitting(true);
+    try {
+      const newTicket = await complaintStore.addComplaint({
+        raisedByUserId: user?.id || user?.mobile || '8888888888',
+        raisedByName: user?.full_name || 'Portal User',
+        raisedByRole: (user?.role as any) || 'agent',
+        subject,
+        category,
+        description
+      });
 
-    setSuccessMsg(`Complaint Ticket "${newTicket.ticketNo}" raised successfully! Our support team will review it.`);
-    setSubject('');
-    setDescription('');
-    setTimeout(() => {
-      setIsModalOpen(false);
-      setSuccessMsg('');
-    }, 2500);
+      setSuccessMsg(`Complaint Ticket "${newTicket.ticketNo}" raised successfully! Our support team will review it.`);
+      setSubject('');
+      setDescription('');
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setSuccessMsg('');
+      }, 2000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const priorityMap: Record<string, number> = {
@@ -416,9 +426,17 @@ export default function DistributorComplaint() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors cursor-pointer"
+                    disabled={isSubmitting}
+                    className="px-5 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 min-w-[130px]"
                   >
-                    Submit Ticket
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <span>Submit Ticket</span>
+                    )}
                   </button>
                 </div>
 

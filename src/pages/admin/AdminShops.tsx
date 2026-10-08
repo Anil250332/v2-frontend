@@ -12,7 +12,8 @@ import {
   Mail,
   PlusCircle,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 
 const formatDateTime = (dateStr?: string) => {
@@ -88,23 +89,43 @@ export default function AdminShops() {
     s.shopCode.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const [processingId, setProcessingId] = useState<string | number | null>(null);
+
   // Handlers
-  const handleApprovePending = (shop: Shop) => {
-    shopStore.approveShop(shop.id);
-    setSuccessMsg(`Shop "${shop.shopName}" approved & activated!`);
-    setTimeout(() => setSuccessMsg(''), 3000);
+  const handleApprovePending = async (shop: Shop) => {
+    if (processingId === shop.id) return;
+    setProcessingId(shop.id);
+    try {
+      await shopStore.approveShop(shop.id);
+      setSuccessMsg(`Shop "${shop.shopName}" approved & activated!`);
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } finally {
+      setProcessingId(null);
+    }
   };
 
-  const handleApproveDeletion = (shop: Shop) => {
-    shopStore.approveDeletion(shop.id);
-    setSuccessMsg(`Deletion approved for "${shop.shopName}". Shop deactivated & login blocked!`);
-    setTimeout(() => setSuccessMsg(''), 3000);
+  const handleApproveDeletion = async (shop: Shop) => {
+    if (processingId === shop.id) return;
+    setProcessingId(shop.id);
+    try {
+      await shopStore.approveDeletion(shop.id);
+      setSuccessMsg(`Deletion approved for "${shop.shopName}". Shop deactivated & login blocked!`);
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } finally {
+      setProcessingId(null);
+    }
   };
 
-  const handleRejectPending = (shop: Shop) => {
-    shopStore.rejectShop(shop.id);
-    setSuccessMsg(`Registration request for "${shop.shopName}" rejected.`);
-    setTimeout(() => setSuccessMsg(''), 3000);
+  const handleRejectPending = async (shop: Shop) => {
+    if (processingId === shop.id) return;
+    setProcessingId(shop.id);
+    try {
+      await shopStore.rejectShop(shop.id);
+      setSuccessMsg(`Registration request for "${shop.shopName}" rejected.`);
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   const handleAddShopSubmit = async (e: React.FormEvent) => {
@@ -333,15 +354,18 @@ export default function AdminShops() {
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => handleRejectPending(shop)}
-                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-bold"
+                              disabled={processingId === shop.id}
+                              className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-bold"
                             >
                               Reject
                             </button>
                             <button
                               onClick={() => handleApprovePending(shop)}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-xs"
+                              disabled={processingId === shop.id}
+                              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1"
                             >
-                              Approve & Activate
+                              {processingId === shop.id && <Loader2 className="h-3 w-3 animate-spin text-white" />}
+                              <span>{processingId === shop.id ? 'Approving...' : 'Approve & Activate'}</span>
                             </button>
                           </div>
                         )}
@@ -350,10 +374,11 @@ export default function AdminShops() {
                         {shop.status === 'DELETE_REQUESTED' && (
                           <button
                             onClick={() => handleApproveDeletion(shop)}
-                            className="bg-red-600 hover:bg-red-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 justify-end ml-auto"
+                            disabled={processingId === shop.id}
+                            className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 justify-end ml-auto"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            <span>Approve Deletion (Deactivate Shop)</span>
+                            {processingId === shop.id ? <Loader2 className="h-3.5 w-3.5 animate-spin text-white" /> : <Trash2 className="h-3.5 w-3.5" />}
+                            <span>{processingId === shop.id ? 'Deactivating...' : 'Approve Deletion (Deactivate Shop)'}</span>
                           </button>
                         )}
 
