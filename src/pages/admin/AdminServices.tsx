@@ -911,7 +911,7 @@ export default function AdminServices() {
               className="w-full md:w-auto bg-[#1565c0] hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
             >
               <PlusCircle className="h-4 w-4" />
-              <span>Add New Master Service</span>
+              <span>Add New Service</span>
             </button>
           </div>
         </div>
